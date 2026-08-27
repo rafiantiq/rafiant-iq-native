@@ -1,0 +1,26 @@
+name: Build Fixed AAB (Not TWA)
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Build AAB
+        run: |
+          chmod +x gradlew
+          cp signing.keystore app/signing.keystore || true
+          STORE_PASS=$(grep storePassword signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
+          KEY_ALIAS=$(grep keyAlias signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
+          KEY_PASS=$(grep keyPassword signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
+         ./gradlew bundleRelease -PstoreFile=signing.keystore -PstorePassword=$STORE_PASS -PkeyAlias=$KEY_ALIAS -PkeyPassword=$KEY_PASS --no-daemon
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rafiant-IQ-Fixed-AAB-Not-TWA
+          path: app/build/outputs/bundle/release/*.aab
