@@ -1,28 +1,38 @@
-name: Build AAB
-on: [push]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - uses: gradle/gradle-build-action@v2
-      - name: Build WebView AAB
-        run: |
-          if [! -f "./gradlew" ]; then
-            gradle wrapper
-          fi
-          chmod +x gradlew
-          cp signing.keystore app/signing.keystore
-          STORE_PASS=$(grep storePassword signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
-          KEY_ALIAS=$(grep keyAlias signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
-          KEY_PASS=$(grep keyPassword signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
-         ./gradlew bundleRelease -PstoreFile=signing.keystore -PstorePassword=$STORE_PASS -PkeyAlias=$KEY_ALIAS -PkeyPassword=$KEY_PASS
-      - name: Upload AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: Rafiant-WebView-Fixed-AAB
-          path: app/build/outputs/bundle/release/*.aab
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.rafiant.iq'
+    compileSdk 34
+    defaultConfig {
+        applicationId "com.rafiant.iq"
+        minSdk 21
+        targetSdk 34
+        versionCode 3
+        versionName "1.0.2"
+    }
+    signingConfigs {
+        release {
+            def p = project.properties
+            if (p.containsKey('storeFile')) {
+                storeFile file(p['storeFile'])
+                storePassword p['storePassword']
+                keyAlias p['keyAlias']
+                keyPassword p['keyPassword']
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.browser:browser:1.8.0'
+}
