@@ -13,12 +13,12 @@ jobs:
         uses: android-actions/setup-android@v3
       - name: Build AAB
         run: |
-          chmod +x gradlew
-          cp signing.keystore app/signing.keystore || true
+          ls -la
+          cat signing-key-info.txt
           STORE_PASS=$(grep storePassword signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
           KEY_ALIAS=$(grep keyAlias signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
           KEY_PASS=$(grep keyPassword signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
-         ./gradlew bundleRelease -PstoreFile=signing.keystore -PstorePassword=$STORE_PASS -PkeyAlias=$KEY_ALIAS -PkeyPassword=$KEY_PASS --no-daemon
+          gradle bundleRelease -PstoreFile=signing.keystore -PstorePassword=$STORE_PASS -PkeyAlias=$KEY_ALIAS -PkeyPassword=$KEY_PASS --no-daemon
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
