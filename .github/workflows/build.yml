@@ -17,9 +17,10 @@ jobs:
       - name: Build AAB
         run: |
           cp signing.keystore app/signing.keystore || true
-          STORE_PASS=$(grep storePassword signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
-          KEY_ALIAS=$(grep keyAlias signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
-          KEY_PASS=$(grep keyPassword signing-key-info.txt | cut -d'=' -f2 | tr -d '\r' | xargs)
+          STORE_PASS=$(grep "Key store password" signing-key-info.txt | awk -F': ' '{print $2}' | tr -d '\r' | xargs)
+          KEY_ALIAS=$(grep "Key alias" signing-key-info.txt | awk -F': ' '{print $2}' | tr -d '\r' | xargs)
+          KEY_PASS=$(grep "Key password" signing-key-info.txt | awk -F': ' '{print $2}' | tr -d '\r' | xargs)
+          echo "Using alias $KEY_ALIAS"
           gradle bundleRelease -PstoreFile=signing.keystore -PstorePassword=$STORE_PASS -PkeyAlias=$KEY_ALIAS -PkeyPassword=$KEY_PASS --stacktrace --no-daemon
       - name: Upload AAB
         uses: actions/upload-artifact@v4
